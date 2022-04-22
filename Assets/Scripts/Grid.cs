@@ -18,6 +18,16 @@
         {
             return mValues[GetIndex(x, y)];
         }
+        public bool GetValue(int x, int y, out T value)
+        {
+            if (x >= mWidth || y >= mHeight || x < 0 || y < 0)
+            {
+                value = default;
+                return false;
+            }
+            value = GetValue(x, y);
+            return true;
+        }
         public T GetValue(int index)
         {
             return mValues[index];

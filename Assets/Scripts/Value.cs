@@ -9,17 +9,15 @@ namespace Assets.Scripts
     public class Value : MonoBehaviour
     {
         [SerializeField] private TMPro.TMP_Text pNumberText;
-        [SerializeField] private Image pImage;
         [SerializeField] private int mValue = 2;
+        private ValueColor pValueColor;
+        private void Awake()
+        {
+            pValueColor = GetComponent<ValueColor>();
+        }
         private void OnValidate()
         {
             UpdateText();
-            UpdateColor();
-        }
-
-        private void UpdateColor()
-        {
-            pImage.color = mValue != 0 ? Color.white : Color.gray;
         }
 
         //Credit to: https://stackoverflow.com/a/600306
@@ -35,7 +33,7 @@ namespace Assets.Scripts
         {
             mValue = value;
             UpdateText();
-            UpdateColor();
+            pValueColor.UpdateColor(value);
         }
     }
 }
