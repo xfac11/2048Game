@@ -5,20 +5,20 @@ using UnityEngine;
 using DG.Tweening;
 namespace Assets.Scripts
 {
-    struct Action
+    public struct Action
     {
         public int moveToX;
         public int moveToY;
         public ActionType type;
     }
-    enum Direction
+    [Serializable]public enum Direction
     {
         Left,
         Right,
         Up,
         Down
     }
-    enum ActionType
+    public enum ActionType
     {
         Nothing,
         Merge,
@@ -45,22 +45,51 @@ namespace Assets.Scripts
             }
 
             mCurrentGrid.SetValue(2, 5);
-            UpdateVisuals();
+            UpdateVisualsCount();
         }
-        private void UpdateVisuals()
+        private void UpdateVisualsCount()
         {
             for (int i = 0; i < mVisualGrid.Size; i++)
             {
                 mVisualGrid.GetValue(i).GetComponent<Value>().SetValue(mCurrentGrid.GetValue(i));
             }
         }
-        public void MoveLeft()
+        public void Move(DirectionSO direction)
         {
+            List<Action> actionList = null;
+            switch(direction.Direction)
+            {
+                case Direction.Down:
+                    actionList = MoveDown();
+                    break;
+                case Direction.Up:
+                    actionList = MoveUp();
+                    break;
+                case Direction.Right:
+                    actionList = MoveRight();
+                    break;
+                case Direction.Left:
+                    actionList = MoveLeft();
+                    break;
+            }
+            AddTwo();
+            UpdateVisualsCount();
+        }
+
+        private void AnimateGrid(List<Action> actions)
+        {
+            throw new NotImplementedException();
+        }
+
+        public List<Action> MoveLeft()
+        {
+            var actionList = new List<Action>();
             for (int y = 0; y < mCurrentGrid.Height; y++)
             {
                 for (int x = 0; x < mCurrentGrid.Width; x++)
                 {
                     Action action = EvaluateAction(x, y, new Vector2Int(Left, 0));
+                    actionList.Add(action);
                     int value = mCurrentGrid.GetValue(x, y);
                     int moveToValue = mCurrentGrid.GetValue(action.moveToX, action.moveToY);
                     switch (action.type)
@@ -93,16 +122,17 @@ namespace Assets.Scripts
                     }
                 }
             }
-            AddTwo();
-            UpdateVisuals();
+            return actionList;
         }
-        public void MoveRight()
+        public List<Action> MoveRight()
         {
+            var actionList = new List<Action>();
             for (int y = 0; y < mCurrentGrid.Height; y++)
             {
                 for (int x = mCurrentGrid.Width-2; x >= 0; x--)
                 {
                     Action action = EvaluateAction(x, y, new Vector2Int(Right, 0));
+                    actionList.Add(action);
                     int value = mCurrentGrid.GetValue(x, y);
                     int moveToValue = mCurrentGrid.GetValue(action.moveToX, action.moveToY);
                     switch (action.type)
@@ -135,16 +165,18 @@ namespace Assets.Scripts
                     }
                 }
             }
-            AddTwo();
-            UpdateVisuals();
+            return actionList;
         }
-        public void MoveUp()
+        public List<Action> MoveUp()
         {
+            var actionList = new List<Action>();
+
             for (int x = 0; x < mCurrentGrid.Width; x++)
             {
                 for (int y = 0; y < mCurrentGrid.Height; y++)
                 {
                     Action action = EvaluateAction(x, y, new Vector2Int(0, Up));
+                    actionList.Add(action);
                     int value = mCurrentGrid.GetValue(x, y);
                     int moveToValue = mCurrentGrid.GetValue(action.moveToX, action.moveToY);
                     switch (action.type)
@@ -177,16 +209,18 @@ namespace Assets.Scripts
                     }
                 }
             }
-            AddTwo();
-            UpdateVisuals();
+            return actionList;
         }
-        public void MoveDown()
+        public List<Action> MoveDown()
         {
+            var actionList = new List<Action>();
+
             for (int x = 0; x < mCurrentGrid.Width; x++)
             {
                 for (int y = mCurrentGrid.Height - 2; y >= 0; y--)
                 {
                     Action action = EvaluateAction(x, y, new Vector2Int(0, Down));
+                    actionList.Add(action);
                     int value = mCurrentGrid.GetValue(x, y);
                     int moveToValue = mCurrentGrid.GetValue(action.moveToX, action.moveToY);
                     switch (action.type)
@@ -219,63 +253,7 @@ namespace Assets.Scripts
                     }
                 }
             }
-            AddTwo();
-            UpdateVisuals();
-        }
-        private int InitXLoop(Direction direction)
-        {
-            int xValue = 0;
-            switch (direction)
-            {
-                case Direction.Left:
-                    xValue = 0;
-                    break;
-                case Direction.Right:
-                    xValue = mCurrentGrid.Width;
-                    break;
-                case Direction.Down:
-                    xValue = mCurrentGrid.Height;
-                    break;
-                case Direction.Up:
-                    xValue = 0;
-                    break;
-            }
-            return xValue;
-        }
-        private int InitYLoop(Direction direction)
-        {
-            int yValue = 0;
-            switch (direction)
-            {
-                case Direction.Left:
-                    yValue = 0;
-                    break;
-                case Direction.Right:
-                    break;
-                case Direction.Down:
-                    break;
-                case Direction.Up:
-                    break;
-            }
-            return yValue;
-        }
-        private void Increase(Direction direction,ref int val)
-        {
-            switch (direction)
-            {
-                case Direction.Left:
-                    val++;
-                    break;
-                case Direction.Right:
-                    val--;
-                    break;
-                case Direction.Down:
-                    val++;
-                    break;
-                case Direction.Up:
-                    val--;
-                    break;
-            }
+            return actionList;
         }
         private void AddTwo()
         {
