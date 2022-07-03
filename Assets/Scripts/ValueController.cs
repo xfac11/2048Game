@@ -28,24 +28,59 @@ namespace Assets.Scripts
     {
         Grid<int> mCurrentGrid;
         Grid<GameObject> mVisualGrid;
+        [SerializeField] private GameObject pGridvaluePrefab;
+        [SerializeField] private RectTransform pGrid;
         [SerializeField] private List<GameObject> pGridObjects;
-        private bool[] mCanMoveorMerge = new bool[4];
+        [SerializeField] private int mWidth;
+        [SerializeField] private int mHeight;
+        [SerializeField] private bool Regenerate;
+        private List<bool> mCanMoveorMerge;
         public int Left { get { return -1; } }
         public int Right { get { return 1; } }
         public int Up { get { return -1; } }//Need to check
         public int Down { get { return 1; } }//Need to check
         private void Awake()
         {
-            mCurrentGrid = new Grid<int>(4, 4);
-            mVisualGrid = new Grid<GameObject>(4, 4);
+            if (mWidth == 0 || mHeight == 0)
+            {
+                Debug.LogError("Trying to generate with a 0");
+                return;
+            }
+            for (int i = 0; i < pGrid.transform.childCount; i++)
+            {
+                Destroy(pGrid.GetChild(i).gameObject);
+            }
+            pGridObjects.Clear();
+
+            for (int i = 0; i < mWidth * mHeight; i++)
+            {
+                GameObject obj = Instantiate(pGridvaluePrefab);
+                pGridObjects.Add(obj);
+                obj.transform.SetParent(pGrid);
+            }
+            mCanMoveorMerge = new List<bool>();
+            for (int i = 0; i < 4; i++)
+            {
+                mCanMoveorMerge.Add(false);
+            }
+            mCurrentGrid = new Grid<int>(mWidth, mHeight);
+            mVisualGrid = new Grid<GameObject>(mWidth, mHeight);
             for (int i = 0; i < mCurrentGrid.Size; i++)
             {
                 mCurrentGrid.SetValue(0, i);
                 mVisualGrid.SetValue(pGridObjects[i], i);
             }
 
-            mCurrentGrid.SetValue(2, 5);
+            mCurrentGrid.SetValue(2, UnityEngine.Random.Range(0, mWidth), UnityEngine.Random.Range(0, mHeight));
             UpdateVisualsCount();
+        }
+        private void OnValidate()
+        {
+            if (Regenerate)
+            {
+                Regenerate = false;
+                
+            }
         }
         private void UpdateVisualsCount()
         {
@@ -72,13 +107,26 @@ namespace Assets.Scripts
                     actionList = MoveLeft();
                     break;
             }
-            AddTwo();
+            bool shouldAdd = false;
+
+            for (int i = 0; i < actionList.Count; i++)
+            {
+                Action action = actionList[i];
+                if(action.type != ActionType.Nothing)
+                {
+                    shouldAdd = true;
+                }
+            }
+            if(shouldAdd)
+            {
+                AddTwo();
+            }
             UpdateVisualsCount();
         }
 
         private void AnimateGrid(List<Action> actions)
         {
-            throw new NotImplementedException();
+            
         }
 
         public List<Action> MoveLeft()
@@ -283,11 +331,17 @@ namespace Assets.Scripts
             bool done = false;
             int checkIndexX = indexX + direction.x;//
             int checkIndexY = indexY + direction.y;
+            bool isInsideGrid = mCurrentGrid.GetValue(checkIndexX, checkIndexY, out int _);
+            if(!isInsideGrid)
+            {
+                //Outside directly so must be beside a wall so no move or merge.
+                action.type = ActionType.Nothing;
+                return action;
+            }
             while (!done)
             {
-                bool isInsideGrid = mCurrentGrid.GetValue(checkIndexX, checkIndexY, out int checkValue);
-
-                if(!isInsideGrid ||
+                isInsideGrid = mCurrentGrid.GetValue(checkIndexX, checkIndexY, out int checkValue);
+                if (!isInsideGrid ||
                     (checkValue != 0 && checkValue != currentValue))
                 {
                     //Wall or different number stop check and move

@@ -27,7 +27,10 @@ namespace Assets.Scripts
         }
         private void UpdateText()
         {
-            pNumberText.text = mValue.ToString();
+            if(pNumberText != null)
+            {
+                pNumberText.text = mValue.ToString();
+            }
         }
         public void SetValue(int value)
         {
